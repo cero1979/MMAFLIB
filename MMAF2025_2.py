@@ -1,104 +1,88 @@
+"""Interactive field mowing demo using ipywidgets.
+
+This module exposes :func:`podar_campo_demo`, an interactive demonstration
+that compares the areas of an outer square of side ``b`` with an inner square
+produced by mowing a strip of width ``x`` on each side.  Sliders let the user
+adjust ``b`` and ``x`` in Jupyter/Colab environments without needing a special
+Matplotlib backend.
+"""
+
+from __future__ import annotations
+
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider
+import ipywidgets as widgets
+from IPython.display import clear_output, display
 
 
 def podar_campo_demo(b0: float = 10.0, x0: float = 2.0):
-    """Interactive demonstration comparing two area expressions.
+    """Display an interactive plot showing the mowed area of a square field.
 
     Parameters
     ----------
-    b0 : float
-        Side length of the outer square.
-    x0 : float
-        Width of the mowed strip on each side.
+    b0 : float, default 10.0
+        Initial side length of the outer square.
+    x0 : float, default 2.0
+        Initial width of the mowed strip on each side.
     """
-    fig = plt.figure(figsize=(8, 6))
 
-    ax_field = fig.add_axes([0.1, 0.25, 0.5, 0.7])
-    ax_field.set_aspect("equal")
-    ax_field.axis("off")
+    out = widgets.Output()
 
-    outer_square = plt.Rectangle((0, 0), b0, b0,
-                                  facecolor="#d5f2c2", edgecolor="black")
-    inner_side = b0 - 2 * x0
-    inner_square = plt.Rectangle((x0, x0), inner_side, inner_side,
-                                  facecolor="white", edgecolor="black")
-    ax_field.add_patch(outer_square)
-    ax_field.add_patch(inner_square)
-    ax_field.set_xlim(0, b0)
-    ax_field.set_ylim(0, b0)
+    b_slider = widgets.FloatSlider(value=b0, min=0.1, max=20.0, step=0.1, description="b")
+    x_slider = widgets.FloatSlider(value=x0, min=0.0, max=b0 / 2, step=0.1, description="x")
 
-    ax_text = fig.add_axes([0.65, 0.25, 0.3, 0.7])
-    ax_text.axis("off")
-    text_box = ax_text.text(0, 1, "", va="top", ha="left")
+    def draw(b: float, x: float) -> None:
+        """Redraw the field for the current slider values."""
+        if x > b / 2:
+            x = b / 2
+            x_slider.value = x
 
-    ax_slider_b = fig.add_axes([0.1, 0.15, 0.8, 0.03])
-    slider_b = Slider(ax_slider_b, "b", inner_side, 20, valinit=b0)
+        inner_side = b - 2 * x
+        b_slider.min = inner_side
+        x_slider.max = b / 2
 
-    ax_slider_x = fig.add_axes([0.1, 0.1, 0.8, 0.03])
-    slider_x = Slider(ax_slider_x, "x", 0, b0 / 2, valinit=x0)
+        fig, ax_field = plt.subplots(figsize=(6, 6))
+        ax_field.set_aspect("equal")
+        ax_field.axis("off")
 
-    def update_text(b, x, inner_side):
+        outer_sq = plt.Rectangle((0, 0), b, b, facecolor="#d5f2c2", edgecolor="black")
+        inner_sq = plt.Rectangle((x, x), inner_side, inner_side,
+                                 facecolor="white", edgecolor="black")
+        ax_field.add_patch(outer_sq)
+        ax_field.add_patch(inner_sq)
+        ax_field.set_xlim(0, b)
+        ax_field.set_ylim(0, b)
+
         A1 = b * b
         A2 = inner_side * inner_side
-        podada_diff = A1 - A2
-        podada_formula = 4 * x * (b - x)
-        text_box.set_text(
+        diff = A1 - A2
+        formula = 4 * x * (b - x)
+        text = (
             f"b = {b:.2f}\n"
             f"x = {x:.2f}\n"
             f"A₁ = b² = {A1:.2f}\n"
             f"A₂ = (b - 2x)² = {A2:.2f}\n"
-            f"A₁ - A₂ = {podada_diff:.2f}\n"
-            f"4x(b - x) = {podada_formula:.2f}"
+            f"A₁ - A₂ = {diff:.2f}\n"
+            f"4x(b - x) = {formula:.2f}"
         )
-        fig.canvas.draw_idle()
+        ax_field.text(1.05, 1, text, transform=ax_field.transAxes,
+                      va="top", ha="left")
 
-    def update_b(val):
-        b = slider_b.val
-        inner_side = inner_square.get_width()
-        if b < inner_side:
-            slider_b.eventson = False
-            slider_b.set_val(inner_side)
-            slider_b.eventson = True
-            b = inner_side
-        outer_square.set_width(b)
-        outer_square.set_height(b)
-        ax_field.set_xlim(0, b)
-        ax_field.set_ylim(0, b)
-        x = (b - inner_side) / 2
-        inner_square.set_xy((x, x))
-        slider_x.eventson = False
-        slider_x.valmax = b / 2
-        slider_x.set_val(x)
-        slider_x.eventson = True
-        update_text(b, x, inner_side)
+        with out:
+            clear_output(wait=True)
+            display(fig)
+        plt.close(fig)
 
-    def update_x(val):
-        x = slider_x.val
-        b = slider_b.val
-        if x > b / 2:
-            x = b / 2
-            slider_x.eventson = False
-            slider_x.set_val(x)
-            slider_x.eventson = True
-        inner_side = b - 2 * x
-        inner_square.set_width(inner_side)
-        inner_square.set_height(inner_side)
-        inner_square.set_xy((x, x))
-        slider_b.eventson = False
-        slider_b.valmin = inner_side
-        slider_b.ax.set_xlim(slider_b.valmin, slider_b.valmax)
-        if slider_b.val < inner_side:
-            slider_b.set_val(inner_side)
-        slider_b.eventson = True
-        update_text(b, x, inner_side)
+    def on_change(change):
+        draw(b_slider.value, x_slider.value)
 
-    slider_b.on_changed(update_b)
-    slider_x.on_changed(update_x)
-    update_x(x0)
+    b_slider.observe(on_change, names="value")
+    x_slider.observe(on_change, names="value")
+    draw(b0, x0)
 
-    plt.show()
-    return fig, slider_b, slider_x
+    controls = widgets.HBox([b_slider, x_slider])
+    display(widgets.VBox([out, controls]))
+
+    return out, (b_slider, x_slider)
 
 
 if __name__ == "__main__":
