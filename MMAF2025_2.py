@@ -167,5 +167,5 @@ def lanzar_interactivo():
         y_c=IntSlider(value=0, min=0, max=5, step=1, description="y de C")
     )
 
- if __name__ == "__main__":
+if __name__ == "__main__":
     lanzar_interactivo()   
