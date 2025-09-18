@@ -1,17 +1,28 @@
+
+
+MMAF2025_2.py
+Nuevo
++176
+-0
+
 """Interactive field mowing demo using ipywidgets.
 
 This module exposes :func:`podar_campo_demo`, an interactive demonstration
 that compares the areas of an outer square of side ``b`` with an inner square
-produced by mowing a strip of width ``x`` on each side.  Sliders let the user
+produced by mowing a strip of width ``x`` on each side. Sliders let the user
 adjust ``b`` and ``x`` in Jupyter/Colab environments without needing a special
 Matplotlib backend.
 """
 
 from __future__ import annotations
 
+import random
+
 import matplotlib.pyplot as plt
+import numpy as np
 import ipywidgets as widgets
 from IPython.display import clear_output, display
+from ipywidgets import IntSlider, interact
 
 
 def podar_campo_demo(b0: float = 10.0, x0: float = 2.0):
@@ -85,27 +96,18 @@ def podar_campo_demo(b0: float = 10.0, x0: float = 2.0):
     return out, (b_slider, x_slider)
 
 
-#if __name__ == "__main__":
-#    podar_campo_demo()
-
-    import numpy as np
-import matplotlib.pyplot as plt
-from ipywidgets import interact, IntSlider
-import random
-
 def generar_escenario():
-    # Generar punto de intersección entero aleatorio en cada ejecución
+    """Generar un escenario aleatorio de cruce de drones."""
     C_real = np.array([random.randint(-2, 4), random.randint(0, 4)])
 
-    # Generar posiciones de drones enteras, distintas de C_real y separadas de C_real
     def random_drone_point(exclude, xlim, ylim):
         while True:
             p = np.array([random.randint(*xlim), random.randint(*ylim)])
             if not np.array_equal(p, exclude):
                 return p
 
-    D1 = random_drone_point(C_real, (-5, C_real[0]-1), (-2, C_real[1]-1))
-    D2 = random_drone_point(C_real, (C_real[0]+1, 7), (C_real[1]+1, 5))
+    D1 = random_drone_point(C_real, (-5, C_real[0] - 1), (-2, C_real[1] - 1))
+    D2 = random_drone_point(C_real, (C_real[0] + 1, 7), (C_real[1] + 1, 5))
 
     v1 = C_real - D1
     v2 = C_real - D2
@@ -114,7 +116,9 @@ def generar_escenario():
 
     return C_real, D1, D2, v1, v2, S1, S2
 
+
 def evitar_colision_factory():
+    """Crear una función interactiva para evitar la colisión de drones."""
     C_real, D1, D2, v1, v2, S1, S2 = generar_escenario()
 
     def evitar_colision(x_c, y_c):
@@ -134,18 +138,18 @@ def evitar_colision_factory():
         ax.scatter(*D1, color="dodgerblue", s=80, label="Dron 1")
         ax.scatter(*D2, color="darkorange", s=80, label="Dron 2")
         ax.scatter(*C, color="purple", marker="*", s=200, label=fr"Punto propuesto C({x_c}, {y_c})")
-        # Mostrar el punto de intersección real sin taparlo con la leyenda
         ax.scatter(*C_real, color="black", marker="x", s=100, zorder=10, label="Punto de cruce real")
 
         if distancia <= tolerancia:
-            ax.scatter(*S1, color="navy", marker="s", s=120, label=fr"Punto extra dron 1 S₁({S1[0]:.2f}, {S1[1]:.2f})")
-            ax.scatter(*S2, color="sienna", marker="s", s=120, label=fr"Punto extra dron 2 S₂({S2[0]:.2f}, {S2[1]:.2f})")
+            ax.scatter(*S1, color="navy", marker="s", s=120,
+                       label=fr"Punto extra dron 1 S₁({S1[0]:.2f}, {S1[1]:.2f})")
+            ax.scatter(*S2, color="sienna", marker="s", s=120,
+                       label=fr"Punto extra dron 2 S₂({S2[0]:.2f}, {S2[1]:.2f})")
 
         ax.set_xlim(-6, 7)
         ax.set_ylim(-3, 6)
         ax.set_aspect("equal", adjustable="box")
         ax.grid(True, alpha=0.3)
-        # Colocar la leyenda fuera del área de la gráfica para no tapar el cruce
         ax.legend(loc="upper right", bbox_to_anchor=(1.35, 1))
         ax.set_title("Localiza el punto de cruce de los drones (coordenadas enteras)")
         plt.show()
@@ -160,12 +164,20 @@ def evitar_colision_factory():
 
     return evitar_colision
 
+
 def lanzar_interactivo():
-    interact(
+    """Mostrar los controles interactivos del ejercicio de drones."""
+    return interact(
         evitar_colision_factory(),
         x_c=IntSlider(value=0, min=-2, max=5, step=1, description="x de C"),
-        y_c=IntSlider(value=0, min=0, max=5, step=1, description="y de C")
+        y_c=IntSlider(value=0, min=0, max=5, step=1, description="y de C"),
     )
 
-if __name__ == "__main__":
-    lanzar_interactivo()   
+
+def main():
+    """Entry point para ejecutar el módulo como script."""
+    lanzar_interactivo()
+
+
+if __name__ == "__main__" and "__file__" in globals():
+    main()
