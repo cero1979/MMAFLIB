@@ -1,9 +1,5 @@
 
 
-MMAF2025_2.py
-Nuevo
-+176
--0
 
 """Interactive field mowing demo using ipywidgets.
 
