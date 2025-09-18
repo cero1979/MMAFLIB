@@ -85,8 +85,8 @@ def podar_campo_demo(b0: float = 10.0, x0: float = 2.0):
     return out, (b_slider, x_slider)
 
 
-if __name__ == "__main__":
-    podar_campo_demo()
+#if __name__ == "__main__":
+#    podar_campo_demo()
 
     import numpy as np
 import matplotlib.pyplot as plt
@@ -166,3 +166,6 @@ def lanzar_interactivo():
         x_c=IntSlider(value=0, min=-2, max=5, step=1, description="x de C"),
         y_c=IntSlider(value=0, min=0, max=5, step=1, description="y de C")
     )
+
+ if __name__ == "__main__":
+    lanzar_interactivo()   
