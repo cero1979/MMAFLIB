@@ -91,7 +91,7 @@ def podar_campo_demo(b0: float = 10.0, x0: float = 2.0):
 
     return out, (b_slider, x_slider)
 
-
+import numpy as np
 def generar_escenario():
     """Generar un escenario aleatorio de cruce de drones."""
     C_real = np.array([random.randint(-2, 4), random.randint(0, 4)])
