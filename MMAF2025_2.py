@@ -371,3 +371,237 @@ def lanzar_demo_viga():
     
     print("\n\n" + "="*60); print("INSTRUCCIONES FINALES"); print("="*60)
     print("Usa el explorador interactivo y los botones para verificar tus respuestas. ¡Suerte! 🚀")
+
+    # ===================================================================
+# FUNCIÓN PARA AGREGAR AL ARCHIVO MMAF2025_2.py
+# ===================================================================
+
+def interactive_river_efficiency():
+    """
+    Interfaz interactiva para encontrar el umbral de eficiencia 
+    en algoritmos de optimización de rutas fluviales.
+    
+    Permite al usuario explorar la función R(n) = n/(ln n)² 
+    y encontrar cuándo supera un umbral crítico U.
+    """
+    import matplotlib.pyplot as plt
+    import numpy as np
+    import ipywidgets as widgets
+    from IPython.display import display, clear_output
+    
+    # Configuración inicial
+    output = widgets.Output()
+    
+    # Controles
+    umbral_slider = widgets.FloatSlider(
+        value=150.0,
+        min=50.0,
+        max=500.0,
+        step=10.0,
+        description='Umbral U:',
+        style={'description_width': '100px'}
+    )
+    
+    puertos_slider = widgets.IntSlider(
+        value=50,
+        min=10,
+        max=200,
+        step=1,
+        description='Puertos (n):',
+        style={'description_width': '100px'}
+    )
+    
+    # Botones para metodología Polya
+    btn_comprender = widgets.Button(description="1. Comprender", button_style='info')
+    btn_planear = widgets.Button(description="2. Planear", button_style='warning') 
+    btn_ejecutar = widgets.Button(description="3. Ejecutar", button_style='success')
+    btn_examinar = widgets.Button(description="4. Examinar", button_style='danger')
+    
+    # Área de texto para respuestas
+    respuesta_area = widgets.Textarea(
+        placeholder="Escribe aquí tu análisis siguiendo la metodología de Polya...",
+        layout=widgets.Layout(width='100%', height='150px')
+    )
+    
+    def eficiencia_relativa(n):
+        """Calcula R(n) = n/(ln n)²"""
+        if n <= 1:
+            return 0
+        return n / (np.log(n)**2)
+    
+    def encontrar_umbral_minimo(umbral, max_n=1000):
+        """Encuentra el n mínimo donde R(n) >= umbral"""
+        for n in range(2, max_n):
+            if eficiencia_relativa(n) >= umbral:
+                return n
+        return None
+    
+    def actualizar_grafica():
+        with output:
+            clear_output(wait=True)
+            
+            # Parámetros actuales
+            U = umbral_slider.value
+            n_actual = puertos_slider.value
+            
+            # Calcular valores
+            n_values = np.arange(2, 200)
+            R_values = [eficiencia_relativa(n) for n in n_values]
+            R_actual = eficiencia_relativa(n_actual)
+            n_critico = encontrar_umbral_minimo(U)
+            
+            # Crear gráfica
+            fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+            
+            # Gráfica principal
+            ax1.plot(n_values, R_values, 'b-', linewidth=2.5, label='R(n) = n/(ln n)²')
+            ax1.axhline(y=U, color='red', linestyle='--', linewidth=2, alpha=0.8, label=f'Umbral U = {U}')
+            ax1.axvline(x=n_actual, color='orange', linestyle=':', linewidth=2, alpha=0.7, label=f'n = {n_actual}')
+            ax1.plot(n_actual, R_actual, 'ro', markersize=10, label=f'R({n_actual}) = {R_actual:.2f}')
+            
+            if n_critico:
+                ax1.axvline(x=n_critico, color='green', linestyle='-', linewidth=2, alpha=0.8, label=f'n crítico = {n_critico}')
+                ax1.plot(n_critico, eficiencia_relativa(n_critico), 'go', markersize=10)
+            
+            ax1.set_xlabel('Número de puertos (n)', fontsize=12, fontweight='bold')
+            ax1.set_ylabel('Eficiencia relativa R(n)', fontsize=12, fontweight='bold')
+            ax1.set_title('Eficiencia del Algoritmo de Rutas Fluviales', fontsize=14, fontweight='bold')
+            ax1.grid(True, alpha=0.3)
+            ax1.legend()
+            ax1.set_xlim(2, 200)
+            ax1.set_ylim(0, max(500, U*1.2))
+            
+            # Diagrama conceptual del río Magdalena
+            ax2.set_xlim(0, 10)
+            ax2.set_ylim(0, 10)
+            ax2.axis('off')
+            
+            # Dibujar río (línea serpenteante)
+            rio_x = np.linspace(1, 9, 100)
+            rio_y = 5 + 1.5*np.sin(rio_x*2) + 0.5*np.sin(rio_x*5)
+            ax2.plot(rio_x, rio_y, 'b-', linewidth=8, alpha=0.6, label='Río Magdalena')
+            
+            # Puertos a lo largo del río
+            puertos_x = [2, 3.5, 5, 6.5, 8]
+            puertos_y = [5 + 1.5*np.sin(x*2) + 0.5*np.sin(x*5) for x in puertos_x]
+            ax2.scatter(puertos_x, puertos_y, c='red', s=100, marker='s', zorder=5, label='Puertos')
+            
+            # Embarcaciones
+            barcos_x = [2.8, 4.2, 6.8]
+            barcos_y = [5 + 1.5*np.sin(x*2) + 0.5*np.sin(x*5) + 0.3 for x in barcos_x]
+            ax2.scatter(barcos_x, barcos_y, c='brown', s=80, marker='^', zorder=5, label='Embarcaciones')
+            
+            # Rutas (líneas punteadas entre puertos)
+            for i in range(len(puertos_x)-1):
+                ax2.plot([puertos_x[i], puertos_x[i+1]], [puertos_y[i], puertos_y[i+1]], 
+                        'g--', alpha=0.7, linewidth=2)
+            
+            ax2.text(5, 1, f'Sistema con {n_actual} puertos\nEficiencia: {R_actual:.2f}', 
+                    ha='center', fontsize=11, bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow"))
+            ax2.set_title('Transporte Fluvial - Río Magdalena', fontsize=14, fontweight='bold')
+            ax2.legend(loc='upper right')
+            
+            plt.tight_layout()
+            plt.show()
+            
+            # Mostrar resultados
+            print("="*70)
+            print("📊 ANÁLISIS DE EFICIENCIA DEL ALGORITMO DE RUTAS FLUVIALES")
+            print("="*70)
+            print(f"🎯 Umbral crítico establecido: U = {U}")
+            print(f"📍 Número actual de puertos: n = {n_actual}")
+            print(f"📈 Eficiencia actual: R({n_actual}) = {R_actual:.4f}")
+            
+            if R_actual >= U:
+                print(f"⚠️  ALERTA: La eficiencia actual ({R_actual:.2f}) SUPERA el umbral ({U})")
+                print("   El algoritmo podría no escalar adecuadamente.")
+            else:
+                print(f"✅ OK: La eficiencia actual ({R_actual:.2f}) está bajo el umbral ({U})")
+            
+            if n_critico:
+                print(f"🔢 Número crítico de puertos: n = {n_critico}")
+                print(f"   A partir de {n_critico} puertos, el algoritmo supera el umbral.")
+            else:
+                print("🔢 No se encontró punto crítico en el rango analizado.")
+            
+            print("\n💡 INTERPRETACIÓN:")
+            print("   - R(n) = n/(ln n)² mide la eficiencia relativa del algoritmo")
+            print("   - Valores altos indican que el algoritmo no escala bien")
+            print("   - El umbral U marca el límite aceptable de eficiencia")
+            print("="*70)
+    
+    def mostrar_ayuda_polya(paso):
+        """Muestra ayuda específica para cada paso de Polya"""
+        ayudas = {
+            1: """
+            🔍 PASO 1: COMPRENDER EL PROBLEMA
+            
+            Preguntas clave:
+            • ¿Qué representa la función R(n) = n/(ln n)² en el contexto fluvial?
+            • ¿Qué significa que R(n) supere el umbral U?
+            • ¿Por qué es importante encontrar el n crítico?
+            • ¿Cuáles son las variables del problema?
+            """,
+            2: """
+            📋 PASO 2: PLANEAR LA SOLUCIÓN
+            
+            Estrategia sugerida:
+            • Analizar el comportamiento de R(n) para diferentes valores de n
+            • Usar la gráfica interactiva para explorar la función
+            • Identificar visualmente dónde R(n) cruza el umbral U
+            • Verificar el resultado usando el slider de puertos
+            """,
+            3: """
+            ⚡ PASO 3: EJECUTAR EL PLAN
+            
+            Acciones a realizar:
+            • Mover el slider de umbral para ver diferentes valores de U
+            • Observar cómo cambia el punto crítico n
+            • Usar el slider de puertos para verificar valores específicos
+            • Anotar los resultados obtenidos
+            """,
+            4: """
+            ✅ PASO 4: EXAMINAR LA SOLUCIÓN
+            
+            Verificaciones:
+            • ¿El valor de n crítico tiene sentido en el contexto?
+            • ¿R(n) efectivamente supera U en ese punto?
+            • ¿La gráfica confirma tus cálculos?
+            • ¿La solución es práctica para CORMAGDALENA?
+            """
+        }
+        
+        with output:
+            clear_output(wait=True)
+            print(ayudas.get(paso, "Paso no encontrado"))
+            actualizar_grafica()
+    
+    # Eventos de botones
+    btn_comprender.on_click(lambda b: mostrar_ayuda_polya(1))
+    btn_planear.on_click(lambda b: mostrar_ayuda_polya(2))
+    btn_ejecutar.on_click(lambda b: mostrar_ayuda_polya(3))
+    btn_examinar.on_click(lambda b: mostrar_ayuda_polya(4))
+    
+    # Eventos de sliders
+    umbral_slider.observe(lambda change: actualizar_grafica(), names='value')
+    puertos_slider.observe(lambda change: actualizar_grafica(), names='value')
+    
+    # Layout inicial
+    controles = widgets.HBox([umbral_slider, puertos_slider])
+    botones_polya = widgets.HBox([btn_comprender, btn_planear, btn_ejecutar, btn_examinar])
+    
+    print("🚢 OPTIMIZACIÓN DE RUTAS FLUVIALES - RÍO MAGDALENA")
+    print("="*60)
+    print("Explora cómo la eficiencia del algoritmo cambia con el número de puertos")
+    print("Usa los controles para encontrar el punto crítico donde R(n) ≥ U")
+    print("="*60)
+    
+    display(controles)
+    display(widgets.HTML("<h4>📚 Metodología de Polya:</h4>"))
+    display(botones_polya)
+    display(widgets.HTML("<h4>✍️ Área de trabajo:</h4>"))
+    display(respuesta_area)
+    display(output)
+    
+    # Mostrar gráfica inicial
+    actualizar_grafica()
